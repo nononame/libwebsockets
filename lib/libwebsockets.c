@@ -245,7 +245,6 @@ libwebsocket_close_and_free_session(struct libwebsocket_context *context,
 		context->protocols[0].callback(context, wsi,
 			LWS_CALLBACK_CLIENT_CONNECTION_ERROR, NULL, NULL, 0);
 
-		free(wsi->u.hdr.ah);
 		goto just_kill_connection;
 	}
 
@@ -489,6 +488,8 @@ just_kill_connection:
 					wsi->user_space) /* user code may own */
 		free(wsi->user_space);
 
+  if (wsi->u.hdr.ah)
+    free(wsi->u.hdr.ah);
 	free(wsi);
 }
 
