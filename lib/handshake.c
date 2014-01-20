@@ -262,6 +262,7 @@ leave:
 					free(ah);
 				/* not possible to continue to use past here */
 				wsi->u.http.ah = NULL;
+        wsi->u.hdr.ah = NULL;
 
 				if (n) {
 					lwsl_info("LWS_CALLBACK_HTTP closing\n");
@@ -438,7 +439,10 @@ leave:
 bail_nuke_ah:
 	/* drop the header info */
 	if (wsi->u.hdr.ah)
+  {
 		free(wsi->u.hdr.ah);
+    wsi->u.hdr.ah = NULL;
+  }
 
 bail:
 	lwsl_info("closing connection at libwebsocket_read bail:\n");

@@ -267,8 +267,10 @@ bail:
 	/* free up his parsing allocations */
 
 	if (wsi->u.hdr.ah)
+  {
 		free(wsi->u.hdr.ah);
-
+    wsi->u.hdr.ah = NULL;
+  }
 	return -1;
 }
 

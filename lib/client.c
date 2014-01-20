@@ -780,8 +780,10 @@ bail2:
 	/* free up his parsing allocations */
 
 	if (wsi->u.hdr.ah)
+  {
 		free(wsi->u.hdr.ah);
-
+    wsi->u.hdr.ah = NULL;
+  }
 	libwebsocket_close_and_free_session(context, wsi, close_reason);
 
 	return 1;

@@ -187,7 +187,10 @@ int lws_server_socket_service(struct libwebsocket_context *context,
 				lwsl_info("lws_server_skt_srv: read 0 len\n");
 				/* lwsl_info("   state=%d\n", wsi->state); */
 				if (!wsi->hdr_parsing_completed)
+        {
 					free(wsi->u.hdr.ah);
+          wsi->u.hdr.ah = NULL;
+        }
 				libwebsocket_close_and_free_session(
 				       context, wsi, LWS_CLOSE_STATUS_NOSTATUS);
 				return 0;
@@ -301,7 +304,7 @@ int lws_server_socket_service(struct libwebsocket_context *context,
 			    ERR_error_string(SSL_get_error(
 			    new_wsi->ssl, 0), NULL));
 			    libwebsockets_decode_ssl_error();      
-      if (new_wsi->u.hdr.ah)
+      if (new_wsi->u.hdr.ah)      
         free(new_wsi->u.hdr.ah);
 			free(new_wsi);
 			compatible_close(accept_fd);
