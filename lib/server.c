@@ -300,7 +300,9 @@ int lws_server_socket_service(struct libwebsocket_context *context,
 			lwsl_err("SSL_new failed: %s\n",
 			    ERR_error_string(SSL_get_error(
 			    new_wsi->ssl, 0), NULL));
-			    libwebsockets_decode_ssl_error();
+			    libwebsockets_decode_ssl_error();      
+      if (new_wsi->u.hdr.ah)
+        free(new_wsi->u.hdr.ah);
 			free(new_wsi);
 			compatible_close(accept_fd);
 			break;
