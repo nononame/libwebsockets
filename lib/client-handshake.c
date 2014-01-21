@@ -60,7 +60,12 @@ struct libwebsocket *libwebsocket_client_connect_2(
 
 		wsi->mode = LWS_CONNMODE_WS_CLIENT_WAITING_CONNECT;
 
-		insert_wsi_socket_into_fds(context, wsi);
+		if (insert_wsi_socket_into_fds(context, wsi))
+    { 
+      lwsl_err("Failed to insert socket in the poll\n");
+      compatible_close(wsi->sock);
+      goto oom4;
+    }
 
 		libwebsocket_set_timeout(wsi,
 			PENDING_TIMEOUT_AWAITING_CONNECT_RESPONSE,

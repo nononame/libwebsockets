@@ -135,16 +135,23 @@ insert_wsi_socket_into_fds(struct libwebsocket_context *context,
 		LWS_CALLBACK_LOCK_POLL,
 		wsi->user_space, (void *)(long)wsi->sock, 0);
 
+	/* external POLL support via protocol 0 */
+	if (context->protocols[0].callback(context, wsi,
+    		LWS_CALLBACK_ADD_POLL_FD,
+    		wsi->user_space, (void *)(long)wsi->sock, POLLIN))
+  {
+    lwsl_info("Fail to insert socket in the external poll\n");
+   	context->protocols[0].callback(context, wsi,
+  		LWS_CALLBACK_UNLOCK_POLL,
+  		wsi->user_space, (void *)(long)wsi->sock, 0);
+    return 1;
+  }
+  
 	context->lws_lookup[wsi->sock] = wsi;
 	wsi->position_in_fds_table = context->fds_count;
 	context->fds[context->fds_count].fd = wsi->sock;
 	context->fds[context->fds_count].events = POLLIN;
 	context->fds[context->fds_count++].revents = 0;
-
-	/* external POLL support via protocol 0 */
-	context->protocols[0].callback(context, wsi,
-		LWS_CALLBACK_ADD_POLL_FD,
-		wsi->user_space, (void *)(long)wsi->sock, POLLIN);
 
 	context->protocols[0].callback(context, wsi,
 		LWS_CALLBACK_UNLOCK_POLL,
@@ -2358,7 +2365,13 @@ libwebsocket_create_context(struct lws_context_creation_info *info)
 #endif
 		wsi->mode = LWS_CONNMODE_SERVER_LISTENER;
 
-		insert_wsi_socket_into_fds(context, wsi);
+		if (insert_wsi_socket_into_fds(context, wsi))
+    {
+      lwsl_err("Fail to insert listening socket in the poll\n");
+      free(wsi);
+      compatible_close(sockfd);
+      goto bail;
+    }
 
 		context->listen_service_modulo = LWS_LISTEN_SERVICE_MODULO;
 		context->listen_service_count = 0;

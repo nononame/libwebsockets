@@ -292,8 +292,14 @@ int lws_server_socket_service(struct libwebsocket_context *context,
 
 			lwsl_debug("accepted new conn  port %u on fd=%d\n",
 					  ntohs(cli_addr.sin_port), accept_fd);
-
-			insert_wsi_socket_into_fds(context, new_wsi);
+      if (insert_wsi_socket_into_fds(context, new_wsi))
+      {
+        lwsl_warn("Fail to insert new accepted socket in the poll\n");
+        compatible_close(accept_fd);
+        if (new_wsi->u.hdr.ah)
+          free(new_wsi->u.hdr.ah);
+        free(new_wsi);
+      }
 			break;
 #ifdef LWS_OPENSSL_SUPPORT
 		}
@@ -339,7 +345,13 @@ int lws_server_socket_service(struct libwebsocket_context *context,
 
 		wsi = new_wsi;
 		wsi->mode = LWS_CONNMODE_SSL_ACK_PENDING;
-		insert_wsi_socket_into_fds(context, wsi);
+		if (insert_wsi_socket_into_fds(context, wsi))
+    {
+      lwsl_warn("Fail to insert new accepted socket in the poll\n");
+      libwebsocket_close_and_free_session(context, wsi,
+						 LWS_CLOSE_STATUS_NOSTATUS);
+      break;
+    }
 
 		libwebsocket_set_timeout(wsi, PENDING_TIMEOUT_SSL_ACCEPT,
 							AWAITING_TIMEOUT);
